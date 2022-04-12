@@ -1,0 +1,8 @@
+scikit-learn
+scikit-learn-extra
+numpy
+scipy
+pandas
+modAL
+requests
+python-dotenv
