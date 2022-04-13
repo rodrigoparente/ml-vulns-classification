@@ -8,7 +8,7 @@ import numpy as np
 
 # project imports
 from commons.file import to_file
-from commons.file import metrics_to_file
+from commons.file import fmt_list
 from commons.data import load_data
 from commons.telegram import send_message
 
@@ -57,8 +57,12 @@ def query_committee(classifiers, initial_size, test_size, n_repetitions, n_queri
                     metrics = run_active_super(model_name, scale_data, strategy, committee_size,
                                                X, y, initial_size, test_size, n_queries)
 
-                    output_url = f'{OUTPUT_STRATEGIES}/{strategy_name}/{model_name}-{strategy}'
-                    metrics_to_file(output_url, metrics)
+                    # saving metrics to file
+                    url = f'{OUTPUT_STRATEGIES}/{strategy_name}/{model_name}-{strategy}'
+
+                    for key, values in metrics.items():
+                        values = fmt_list(values, "-") if key == 'cm' else fmt_list(values)
+                        to_file(f'{url}-{key}.txt', f'{values}\n')
 
                 if i % 25 == 0:
                     msg = f'   - {i}% completed.\n'

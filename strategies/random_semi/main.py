@@ -8,7 +8,7 @@ import numpy as np
 
 # local imports
 from commons.file import to_file
-from commons.file import metrics_to_file
+from commons.file import fmt_list
 from commons.data import load_data
 from commons.telegram import send_message
 
@@ -44,8 +44,10 @@ def random_semi(classifiers, initial_size, test_size, n_repetitions, n_queries):
             metrics = run_semi(model_name, scale_data, X_unlabelled,
                                X, y, initial_size, test_size, n_queries)
 
-            output_url = f'{OUTPUT_SEMI}/{model_name}'
-            metrics_to_file(output_url, metrics)
+            # saving metrics to file
+            for key, values in metrics.items():
+                values = fmt_list(values, "-") if key == 'cm' else fmt_list(values)
+                to_file(f'{OUTPUT_SEMI}/{model_name}-{key}.txt', f'{values}\n')
 
             if i % 25 == 0:
                 msg = f'  - {i}% completed.\n'

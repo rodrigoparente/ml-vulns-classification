@@ -40,11 +40,3 @@ def to_file(filename, text):
 
     with open(filename, 'a') as f:
         f.write(text)
-
-
-def metrics_to_file(base_url, metrics):
-    names = ['acc', 'time', 'precision', 'recall', 'f1', 'cm']
-
-    for metric, name in zip(metrics, names):
-        values = fmt_list(metric, "-") if name == 'cm' else fmt_list(metric)
-        to_file(f'{base_url}-{name}.txt', f'{values}\n')

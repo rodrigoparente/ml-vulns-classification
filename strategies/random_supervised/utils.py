@@ -22,7 +22,14 @@ from commons.classifiers import get_estimator
 def run_supervised(model_name, scale_data,
                    X, y, initial_size, test_size, n_queries):
 
-    accs, times, precisions, recalls, f1s, cms = (list() for _ in range(6))
+    metrics = {
+        'acc': list(),
+        'time': list(),
+        'precision': list(),
+        'recall': list(),
+        'f1': list(),
+        'cm': list()
+    }
 
     X_pool, X_initial, y_pool, y_initial =\
         train_test_split(X, y, test_size=initial_size)
@@ -62,16 +69,16 @@ def run_supervised(model_name, scale_data,
 
         # calculating metrics
 
-        accs.append(learner.score(X_test, y_test))
-        times.append(t_learn)
+        metrics['acc'].append(learner.score(X_test, y_test))
+        metrics['time'].append(t_learn)
 
         y_pred = learner.predict(X_test)
 
-        precisions.append(precision_score(y_test, y_pred, average='micro'))
-        recalls.append(recall_score(y_test, y_pred, average='micro'))
-        f1s.append(f1_score(y_test, y_pred, average='micro'))
+        metrics['precision'].append(precision_score(y_test, y_pred, average='micro'))
+        metrics['recall'].append(recall_score(y_test, y_pred, average='micro'))
+        metrics['f1'].append(f1_score(y_test, y_pred, average='micro'))
 
         cm = confusion_matrix(y_test, y_pred, labels=[0, 1, 2, 3], normalize='true')
-        cms.append(fmt_list(fmt_matrix(cm)))
+        metrics['cm'].append(fmt_list(fmt_matrix(cm)))
 
-    return [accs, times, precisions, recalls, f1s, cms]
+    return metrics
