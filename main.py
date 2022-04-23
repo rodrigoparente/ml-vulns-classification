@@ -1,3 +1,6 @@
+# python imports
+import shutil
+
 # third-party imports
 from dotenv import load_dotenv
 
@@ -10,6 +13,10 @@ if __name__ == '__main__':
     # take environment
     # variables from .env
     load_dotenv()
+
+    # clean results & logs
+    shutil.rmtree('logs')
+    shutil.rmtree('results')
 
     # execute tests
     execute()
