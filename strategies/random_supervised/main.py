@@ -14,8 +14,8 @@ from commons.telegram import send_message
 
 # local imports
 from .constants import LABELLED_CSV
-from .constants import OUTPUT_SUPERVISED
-from .constants import LOG_SUPERVISED
+from .constants import OUTPUT_RANDOM_SUPERVISED
+from .constants import LOG_RANDOM_SUPERVISED
 from .utils import run_supervised
 
 # filtering messages to error
@@ -34,7 +34,7 @@ def random_super(classifiers, initial_size, test_size, n_repetitions, n_queries)
         np.random.seed(42)
 
         msg = f'# Begining test for {model_name.upper()} classifier.\n'
-        to_file(LOG_SUPERVISED, msg)
+        to_file(LOG_RANDOM_SUPERVISED, msg)
 
         start = timer()
 
@@ -45,14 +45,14 @@ def random_super(classifiers, initial_size, test_size, n_repetitions, n_queries)
             # saving metrics to file
             for key, values in metrics.items():
                 values = fmt_list(values, "-") if key == 'cm' else fmt_list(values)
-                to_file(f'{OUTPUT_SUPERVISED}/{model_name}-{key}.txt', f'{values}\n')
+                to_file(f'{OUTPUT_RANDOM_SUPERVISED}/{model_name}-{key}.txt', f'{values}\n')
 
             if i % 25 == 0:
                 msg = f'  - {i}% completed.\n'
-                to_file(LOG_SUPERVISED, msg)
+                to_file(LOG_RANDOM_SUPERVISED, msg)
 
         msg = f'\n  Elapsed time: {strftime("%H:%M:%S", gmtime(timer() - start))}\n'
-        to_file(LOG_SUPERVISED, msg)
+        to_file(LOG_RANDOM_SUPERVISED, msg)
 
         # send notification to telegram
         msg = f'Finished random supervised learning: {model_name.upper()} test.'
