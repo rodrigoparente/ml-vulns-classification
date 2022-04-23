@@ -15,7 +15,7 @@ def execute():
     query_committee(classifiers=CLASSIFIERS,
                     initial_size=20,
                     test_size=40,
-                    n_repetitions=5,
+                    n_repetitions=30,
                     n_queries=80,
                     n_committee=2)
 
