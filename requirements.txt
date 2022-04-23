@@ -6,3 +6,7 @@ pandas
 modAL
 requests
 python-dotenv
+scikit-learn-intelex
+jupyter
+matplotlib
+seaborn
