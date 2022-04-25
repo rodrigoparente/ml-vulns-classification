@@ -59,6 +59,9 @@ def query_committee(classifiers, initial_size, test_size, n_repetitions, n_queri
 
             for strategy in strategy_list:
 
+                msg = f'    {strategy}\n'
+                to_file(LOG_STRATEGIES, msg)
+
                 for i, (initial_tuple, pool_tuple, test_tuple) in \
                         enumerate(zip(initial_list, pool_list, test_list)):
 
@@ -77,9 +80,10 @@ def query_committee(classifiers, initial_size, test_size, n_repetitions, n_queri
                         values = fmt_list(values, "-") if key == 'cm' else fmt_list(values)
                         to_file(f'{url}-{key}.txt', f'{values}\n')
 
-                if i % 25 == 0:
-                    msg = f'   - {i}% completed.\n'
-                    to_file(LOG_STRATEGIES, msg)
+                    progress = round(i / n_repetitions * 100)
+                    if progress % 30 == 0:
+                        msg = f'     - {progress}% completed.\n'
+                        to_file(LOG_STRATEGIES, msg)
 
         msg = f'\n  Elapsed time: {strftime("%H:%M:%S", gmtime(timer() - start))}\n'
         to_file(LOG_STRATEGIES, msg)

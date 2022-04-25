@@ -58,8 +58,9 @@ def random_super(classifiers, initial_size, test_size, n_repetitions, n_queries)
                 values = fmt_list(values, "-") if key == 'cm' else fmt_list(values)
                 to_file(f'{OUTPUT_RANDOM_SUPERVISED}/{model_name}-{key}.txt', f'{values}\n')
 
-            if i % 25 == 0:
-                msg = f'  - {i}% completed.\n'
+            progress = round(i / n_repetitions * 100)
+            if progress % 30 == 0:
+                msg = f'  - {progress}% completed.\n'
                 to_file(LOG_RANDOM_SUPERVISED, msg)
 
         msg = f'\n  Elapsed time: {strftime("%H:%M:%S", gmtime(timer() - start))}\n'
