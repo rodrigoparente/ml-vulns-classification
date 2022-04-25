@@ -6,12 +6,18 @@ import numpy as np
 from sklearnex import patch_sklearn
 patch_sklearn()
 
-from sklearn.ensemble import GradientBoostingClassifier  # noqa E402
-from sklearn.linear_model import LogisticRegression  # noqa E402
-from sklearn.ensemble import RandomForestClassifier  # noqa E402
-from sklearn.model_selection import GridSearchCV  # noqa E402
-from sklearn.neural_network import MLPClassifier  # noqa E402
-from sklearn.svm import SVC  # noqa E402
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.svm import SVC
+from sklearn.neural_network import MLPClassifier
+
+from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.utils import shuffle
+
+from sklearn_extra.cluster import KMedoids
 
 
 def get_estimator(name):
@@ -21,13 +27,66 @@ def get_estimator(name):
         return GradientBoostingClassifier()
     elif name == 'lr':
         return LogisticRegression(penalty='none')
-    elif name == 'svc-with-grid':
-        return GridSearchCV(SVC(probability=True, random_state=42), [
+    elif name == 'svc':
+        return GridSearchCV(SVC(probability=True), [
             {'kernel': ['rbf'], 'gamma': 2 ** np.arange(-15.0, 4.0, 2),
                 'C': 2 ** np.arange(-5.0, 16.0, 2)},
             {'kernel': ['linear'], 'C': 2 ** np.arange(-5.0, 16.0, 2)}
         ], scoring='accuracy', cv=5, n_jobs=-1)
-    elif name == 'svc':
-        return SVC(kernel='linear', C=2, probability=True)
     elif name == 'mlp':
         return MLPClassifier()
+
+
+def initial_pool_test_split(X, y, initial_size, test_size,
+                            n_repetitions, init_split_method='none'):
+
+    initial_list = list()
+    pool_list = list()
+    test_list = list()
+
+    for _ in range(n_repetitions):
+
+        X_pool, X_test, y_pool, y_test =\
+            train_test_split(X, y, test_size=test_size)
+
+        if init_split_method == 'kmedoids':
+            # calculating clusters centers
+            kmedoids = KMedoids(n_clusters=initial_size)
+            kmedoids.fit(StandardScaler().fit_transform(X_pool))
+
+            # get the indexes of the medoids centers
+            initial_idx = kmedoids.medoid_indices_
+
+            # selecting elements to X_initial
+            X_initial, y_initial = X_pool[initial_idx], y_pool[initial_idx]
+
+            # removing selected elements from X_pool
+            X_pool = np.delete(X_pool, initial_idx, axis=0)
+            y_pool = np.delete(y_pool, initial_idx, axis=0)
+        else:
+            X_pool, X_initial, y_pool, y_initial =\
+                train_test_split(X_pool, y_pool, test_size=initial_size)
+
+        # shuffling data
+        X_initial, y_initial = shuffle(X_initial, y_initial)
+        X_pool, y_pool = shuffle(X_pool, y_pool)
+        X_test, y_test = shuffle(X_test, y_test)
+
+        initial_list.append((X_initial, y_initial))
+        pool_list.append((X_pool, y_pool))
+        test_list.append((X_test, y_test))
+
+    return initial_list, pool_list, test_list
+
+
+def unwrapping(initial_tuple, pool_tuple, test_tuple):
+    X_initial, y_initial = initial_tuple
+    X_initial, y_initial = X_initial.copy(), y_initial.copy()
+
+    X_pool, y_pool = pool_tuple
+    X_pool, y_pool = X_pool.copy(), y_pool.copy()
+
+    X_test, y_test = test_tuple
+    X_test, y_test = X_test.copy(), y_test.copy()
+
+    return X_initial, X_pool, X_test, y_initial, y_pool, y_test

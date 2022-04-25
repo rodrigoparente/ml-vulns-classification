@@ -11,6 +11,8 @@ from commons.file import to_file
 from commons.file import fmt_list
 from commons.data import load_data
 from commons.telegram import send_message
+from commons.classifiers import unwrapping
+from commons.classifiers import initial_pool_test_split
 
 # local imports
 from .constants import LABELLED_CSV
@@ -30,6 +32,14 @@ def query_committee(classifiers, initial_size, test_size, n_repetitions, n_queri
 
     X, y = load_data(LABELLED_CSV)
 
+    # setting random seed to make
+    # sure the results are the same
+    np.random.seed(42)
+
+    initial_list, pool_list, test_list =\
+        initial_pool_test_split(X, y, initial_size, test_size,
+                                n_repetitions, init_split_method='kmedoids')
+
     for (model_name, scale_data) in classifiers:
 
         msg = f'# Begining test for {model_name.upper()} classifier.\n'
@@ -44,18 +54,21 @@ def query_committee(classifiers, initial_size, test_size, n_repetitions, n_queri
         for strategy_name, strategy_list, committee_size in\
                 zip(names, strategies, committees):
 
-            # setting random seed to make
-            # sure the results are the same
-            np.random.seed(42)
-
             msg = f'  Testing {strategy_name} strategies...\n'
             to_file(LOG_STRATEGIES, msg)
 
-            for i in range(n_repetitions):
+            for strategy in strategy_list:
 
-                for strategy in strategy_list:
-                    metrics = run_active_super(model_name, scale_data, strategy, committee_size,
-                                               X, y, initial_size, test_size, n_queries)
+                for i, (initial_tuple, pool_tuple, test_tuple) in \
+                        enumerate(zip(initial_list, pool_list, test_list)):
+
+                    # safing unwrapping and copying values
+                    X_initial, X_pool, X_test, y_initial, y_pool, y_test =\
+                        unwrapping(initial_tuple, pool_tuple, test_tuple)
+
+                    metrics = run_active_super(model_name, scale_data, strategy,
+                                               committee_size, X_initial, y_initial,
+                                               X_pool, y_pool, X_test, y_test, n_queries)
 
                     # saving metrics to file
                     url = f'{OUTPUT_STRATEGIES}/{strategy_name}/{model_name}-{strategy}'

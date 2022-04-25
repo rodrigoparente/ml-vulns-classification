@@ -19,13 +19,11 @@ from sklearn.metrics import f1_score
 from commons.classifiers import get_estimator
 from commons.file import fmt_matrix
 from commons.file import fmt_list
-
-# project imports
-from strategies.active_supervised.utils import initial_train_test_split
+from constants import LABELS
 
 
-def run_active_semi(model_name, scale_data, X_unlabelled,
-                    X, y, initial_size, test_size, n_queries):
+def run_active_semi(model_name, scale_data, X_unlabelled, X_initial,
+                    y_initial, X_pool, y_pool, X_test, y_test, n_queries):
 
     metrics = {
         'acc': list(),
@@ -36,20 +34,20 @@ def run_active_semi(model_name, scale_data, X_unlabelled,
         'cm': list()
     }
 
-    X_initial, X_pool, X_test, y_initial, y_pool, y_test =\
-        initial_train_test_split(X, y, initial_size, test_size)
+    # creating X_train set
+    X_train = X_initial
+    y_train = y_initial
 
     if scale_data:
-        scaler = StandardScaler().fit(np.r_[X_pool, X_initial])
-        X_initial = scaler.transform(X_initial)
+        scaler = StandardScaler().fit(np.r_[X_unlabelled, X_train, X_pool])
+        X_unlabelled = scaler.transform(X_unlabelled)
+        X_train = scaler.transform(X_train)
         X_pool = scaler.transform(X_pool)
         X_test = scaler.transform(X_test)
 
     learner_active = ActiveLearner(estimator=get_estimator(model_name),
                                    query_strategy=uncertainty_sampling,
-                                   X_training=X_initial, y_training=y_initial)
-
-    X_train, y_train = X_initial, y_initial
+                                   X_training=X_train, y_training=y_train)
 
     for _ in range(n_queries):
         # active learning
@@ -60,6 +58,9 @@ def run_active_semi(model_name, scale_data, X_unlabelled,
         y_train = np.append(y_train, y_pool[query_idx])
 
         learner_active.teach(query_inst.reshape(1, -1), y_pool[query_idx])
+
+        X_pool = np.delete(X_pool, query_idx, axis=0)
+        y_pool = np.delete(y_pool, query_idx, axis=0)
 
         # semi-supervised learning
 
@@ -78,11 +79,6 @@ def run_active_semi(model_name, scale_data, X_unlabelled,
 
         t_learn = timer() - t_learn
 
-        # delete selected item from X_pool
-
-        X_pool = np.delete(X_pool, query_idx, axis=0)
-        y_pool = np.delete(y_pool, query_idx, axis=0)
-
         # calculating metrics
 
         metrics['acc'].append(learner_semi.score(X_test, y_test))
@@ -90,11 +86,11 @@ def run_active_semi(model_name, scale_data, X_unlabelled,
 
         y_pred = learner_semi.predict(X_test)
 
-        metrics['precision'].append(precision_score(y_test, y_pred, average='micro'))
-        metrics['recall'].append(recall_score(y_test, y_pred, average='micro'))
-        metrics['f1'].append(f1_score(y_test, y_pred, average='micro'))
+        metrics['precision'].append(precision_score(y_test, y_pred, average='weighted'))
+        metrics['recall'].append(recall_score(y_test, y_pred, average='weighted'))
+        metrics['f1'].append(f1_score(y_test, y_pred, average='weighted'))
 
-        cm = confusion_matrix(y_test, y_pred, labels=[0, 1, 2, 3], normalize='true')
+        cm = confusion_matrix(y_test, y_pred, labels=LABELS, normalize='true')
         metrics['cm'].append(fmt_list(fmt_matrix(cm)))
 
     return metrics

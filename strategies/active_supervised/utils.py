@@ -4,9 +4,7 @@ from timeit import default_timer as timer
 # third-party imports
 import numpy as np
 
-from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-from sklearn.utils import shuffle
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import precision_score
 from sklearn.metrics import recall_score
@@ -21,39 +19,11 @@ from modAL.disagreement import consensus_entropy_sampling
 from modAL.disagreement import max_disagreement_sampling
 from modAL.disagreement import vote_entropy_sampling
 
-from sklearn_extra.cluster import KMedoids
-
 # project imports
 from commons.classifiers import get_estimator
 from commons.file import fmt_matrix
 from commons.file import fmt_list
-
-
-def initial_train_test_split(X, y, initial_size, test_size):
-
-    X_pool, X_test, y_pool, y_test =\
-        train_test_split(X, y, test_size=test_size, stratify=y)
-
-    # calculating clusters centers
-    kmedoids = KMedoids(n_clusters=initial_size)
-    kmedoids.fit(StandardScaler().fit_transform(X_pool))
-
-    # get the indexes of the medoids centers
-    initial_idx = kmedoids.medoid_indices_
-
-    # selecting elements to X_initial
-    X_initial, y_initial = X_pool[initial_idx], y_pool[initial_idx]
-
-    # removing selected elements from X_pool
-    X_train = np.delete(X_pool, initial_idx, axis=0)
-    y_train = np.delete(y_pool, initial_idx, axis=0)
-
-    # shuffling data
-    X_initial, y_initial = shuffle(X_initial, y_initial)
-    X_train, y_train = shuffle(X_train, y_train)
-    X_test, y_test = shuffle(X_test, y_test)
-
-    return X_initial, X_train, X_test, y_initial, y_train, y_test
+from constants import LABELS
 
 
 def get_query_strategy(name):
@@ -74,14 +44,14 @@ def get_committee_strategy(name):
         return max_disagreement_sampling
 
 
-def bagging(model_name, strategy_name, committee_size,
-            X_initial, y_initial, initial_size):
+def bagging(model_name, strategy_name,
+            committee_size, X_initial, y_initial):
 
     learners = list()
 
     for _ in range(committee_size):
         train_idx = np.random.choice(
-            range(X_initial.shape[0]), size=initial_size, replace=True)
+            range(X_initial.shape[0]), size=X_initial.shape[0], replace=True)
 
         X_train = X_initial[train_idx]
         y_train = y_initial[train_idx]
@@ -99,8 +69,9 @@ def bagging(model_name, strategy_name, committee_size,
     return Committee(learner_list=learners)
 
 
-def run_active_super(model_name, scale_data, strategy_name, committee_size,
-                     X, y, initial_size, test_size, n_queries):
+def run_active_super(model_name, scale_data, strategy_name,
+                     committee_size, X_initial, y_initial,
+                     X_pool, y_pool, X_test, y_test, n_queries):
 
     metrics = {
         'acc': list(),
@@ -113,18 +84,15 @@ def run_active_super(model_name, scale_data, strategy_name, committee_size,
 
     learner = None
 
-    X_initial, X_pool, X_test, y_initial, y_pool, y_test =\
-        initial_train_test_split(X, y, initial_size, test_size)
-
     if scale_data:
-        scaler = StandardScaler().fit(np.r_[X_pool, X_initial])
+        scaler = StandardScaler().fit(np.r_[X_initial, X_pool])
         X_initial = scaler.transform(X_initial)
         X_pool = scaler.transform(X_pool)
         X_test = scaler.transform(X_test)
 
     if committee_size > 0:
-        learner = bagging(model_name, strategy_name, committee_size,
-                          X_initial, y_initial, initial_size)
+        learner = bagging(model_name, strategy_name,
+                          committee_size, X_initial, y_initial)
     else:
         learner = ActiveLearner(estimator=get_estimator(model_name),
                                 query_strategy=get_query_strategy(strategy_name),
@@ -140,8 +108,6 @@ def run_active_super(model_name, scale_data, strategy_name, committee_size,
 
         t_learn = timer() - t_learn
 
-        # delete selected item from X_pool
-
         X_pool = np.delete(X_pool, query_idx, axis=0)
         y_pool = np.delete(y_pool, query_idx, axis=0)
 
@@ -152,11 +118,11 @@ def run_active_super(model_name, scale_data, strategy_name, committee_size,
 
         y_pred = learner.predict(X_test)
 
-        metrics['precision'].append(precision_score(y_test, y_pred, average='micro'))
-        metrics['recall'].append(recall_score(y_test, y_pred, average='micro'))
-        metrics['f1'].append(f1_score(y_test, y_pred, average='micro'))
+        metrics['precision'].append(precision_score(y_test, y_pred, average='weighted'))
+        metrics['recall'].append(recall_score(y_test, y_pred, average='weighted'))
+        metrics['f1'].append(f1_score(y_test, y_pred, average='weighted'))
 
-        cm = confusion_matrix(y_test, y_pred, labels=[0, 1, 2, 3], normalize='true')
+        cm = confusion_matrix(y_test, y_pred, labels=LABELS, normalize='true')
         metrics['cm'].append(fmt_list(fmt_matrix(cm)))
 
     return metrics

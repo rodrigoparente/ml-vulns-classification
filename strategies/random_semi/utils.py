@@ -1,12 +1,10 @@
 # python imports
 from timeit import default_timer as timer
-from random import randrange
 
 # third-party imports
 import numpy as np
 
 from sklearn.semi_supervised import SelfTrainingClassifier
-from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import precision_score
@@ -18,10 +16,11 @@ from sklearn.utils import shuffle
 from commons.file import fmt_list
 from commons.file import fmt_matrix
 from commons.classifiers import get_estimator
+from constants import LABELS
 
 
-def run_semi(model_name, scale_data, X_unlabelled,
-             X, y, initial_size, test_size, n_queries):
+def run_semi(model_name, scale_data, X_unlabelled, X_initial,
+             y_initial, X_pool, y_pool, X_test, y_test, n_queries):
 
     metrics = {
         'acc': list(),
@@ -32,15 +31,9 @@ def run_semi(model_name, scale_data, X_unlabelled,
         'cm': list()
     }
 
-    X_pool, X_initial, y_pool, y_initial =\
-        train_test_split(X, y, test_size=initial_size)
-
-    X_pool, X_test, y_pool, y_test =\
-        train_test_split(X_pool, y_pool, test_size=test_size)
-
+    # creating X_train dataset
     X_train = np.append(X_initial, X_unlabelled, axis=0)
     y_train = np.append(y_initial, np.full(X_unlabelled.shape[0], -1, dtype=int))
-
     X_train, y_train = shuffle(X_train, y_train)
 
     if scale_data:
@@ -52,7 +45,7 @@ def run_semi(model_name, scale_data, X_unlabelled,
     for _ in range(n_queries):
 
         # select random item and append to X_train
-        idx = randrange(len(X_pool))
+        idx = np.random.randint(len(X_pool))
 
         X_train = np.append(X_train, [X_pool[idx]], axis=0)
         y_train = np.append(y_train, [y_pool[idx]])
@@ -80,11 +73,11 @@ def run_semi(model_name, scale_data, X_unlabelled,
 
         y_pred = learner.predict(X_test)
 
-        metrics['precision'].append(precision_score(y_test, y_pred, average='micro'))
-        metrics['recall'].append(recall_score(y_test, y_pred, average='micro'))
-        metrics['f1'].append(f1_score(y_test, y_pred, average='micro'))
+        metrics['precision'].append(precision_score(y_test, y_pred, average='weighted'))
+        metrics['recall'].append(recall_score(y_test, y_pred, average='weighted'))
+        metrics['f1'].append(f1_score(y_test, y_pred, average='weighted'))
 
-        cm = confusion_matrix(y_test, y_pred, labels=[0, 1, 2, 3], normalize='true')
+        cm = confusion_matrix(y_test, y_pred, labels=LABELS, normalize='true')
         metrics['cm'].append(fmt_list(fmt_matrix(cm)))
 
     return metrics
