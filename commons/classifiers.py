@@ -44,10 +44,19 @@ def initial_pool_test_split(X, y, initial_size, test_size,
     pool_list = list()
     test_list = list()
 
+    # splitting data into pool and test
     for _ in range(n_repetitions):
 
         X_pool, X_test, y_pool, y_test =\
             train_test_split(X, y, test_size=test_size)
+
+        pool_list.append((X_pool, y_pool))
+        test_list.append((X_test, y_test))
+
+    # spliting pool into initial and pool
+    for pool in pool_list:
+
+        X_pool, y_pool = pool
 
         if init_split_method == 'kmedoids':
             # calculating clusters centers
@@ -67,14 +76,15 @@ def initial_pool_test_split(X, y, initial_size, test_size,
             X_pool, X_initial, y_pool, y_initial =\
                 train_test_split(X_pool, y_pool, test_size=initial_size)
 
-        # shuffling data
+        initial_list.append((X_initial, y_initial))
+
+    # shuffling data
+    for (X_initial, y_initial), (X_pool, y_pool), (X_test, y_test) in \
+            zip(initial_list, pool_list, test_list):
+
         X_initial, y_initial = shuffle(X_initial, y_initial)
         X_pool, y_pool = shuffle(X_pool, y_pool)
         X_test, y_test = shuffle(X_test, y_test)
-
-        initial_list.append((X_initial, y_initial))
-        pool_list.append((X_pool, y_pool))
-        test_list.append((X_test, y_test))
 
     return initial_list, pool_list, test_list
 
