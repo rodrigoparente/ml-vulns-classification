@@ -1,5 +1,6 @@
 # python imports
 import shutil
+import os
 
 # third-party imports
 from dotenv import load_dotenv
@@ -15,8 +16,9 @@ if __name__ == '__main__':
     load_dotenv()
 
     # clean results & logs
-    shutil.rmtree('logs')
-    shutil.rmtree('results')
+    for dir in ['logs', 'results']:
+        if os.path.exists(dir):
+            shutil.rmtree(dir)
 
     # execute tests
     execute()
