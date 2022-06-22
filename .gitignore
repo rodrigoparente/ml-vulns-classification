@@ -1,7 +1,7 @@
 __pycache__/
 .vscode/
 .ipynb_checkpoints/
-.ipynb
+*.ipynb
 .env
 logs/
 results/
