@@ -1,10 +1,11 @@
 LABELS = [0, 1, 2, 3]
+LABELS_DICT = {'LOW': 0, 'MODERATE': 1, 'IMPORTANT': 2, 'CRITICAL': 3}
 
 CLASSIFIERS = [
     ('rf', False),
     ('gb', False),
     ('lr', True),
-    ('svc', False),
+    ('svc', True),
     ('mlp', True)
 ]
 
