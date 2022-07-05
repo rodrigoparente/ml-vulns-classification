@@ -18,6 +18,7 @@ from modAL.uncertainty import margin_sampling
 from modAL.disagreement import consensus_entropy_sampling
 from modAL.disagreement import max_disagreement_sampling
 from modAL.disagreement import vote_entropy_sampling
+from modAL.disagreement import KL_max_disagreement
 
 # project imports
 from commons.classifiers import get_estimator
@@ -42,6 +43,8 @@ def get_committee_strategy(name):
         return consensus_entropy_sampling
     elif name == 'max-disagreement-sampling':
         return max_disagreement_sampling
+    elif name == 'kl-max-disagreement':
+        return KL_max_disagreement
 
 
 def bagging(model_name, strategy_name,

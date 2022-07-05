@@ -19,6 +19,6 @@ LEARNERS = ['rf', 'gb', 'lr', 'svc', 'mlp']
 QUERY_METHOD = ['query', 'committee']
 
 STRATEGIES = [
-    ['entropy-sampling', 'margin-sampling', 'uncertainty-sampling'],
-    ['consensus-entropy-sampling', 'max-disagreement-sampling', 'vote-entropy-sampling']
+    ['entropy-sampling', 'uncertainty-sampling'],
+    ['kl-max-disagreement', 'vote-entropy-sampling']
 ]
