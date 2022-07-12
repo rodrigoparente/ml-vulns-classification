@@ -7,12 +7,12 @@ LOG_STRATEGIES = 'logs/active-super-strategies.txt'
 LOG_ACTIVE_SUPER = 'logs/active-super.txt'
 
 QUERY_STRATEGIES = [
-    'entropy-sampling', 
+    'entropy-sampling',
     'uncertainty-sampling'
 ]
 
 COMMITTEE_STRATEGIES = [
-    'kl-max-disagreement', 
+    'kl-max-disagreement',
     'vote-entropy-sampling'
 ]
 
