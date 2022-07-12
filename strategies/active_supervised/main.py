@@ -52,7 +52,7 @@ def active_super(classifiers, initial_size, test_size, n_repetitions, n_queries)
             X_initial, X_pool, X_test, y_initial, y_pool, y_test =\
                 unwrapping(initial_tuple, pool_tuple, test_tuple)
 
-            metrics = run_active_super(model_name, scale_data, 'uncertainty-sampling',
+            metrics = run_active_super(model_name, scale_data, 'entropy-sampling',
                                        NO_COMMITTEE, X_initial, y_initial,
                                        X_pool, y_pool, X_test, y_test, n_queries)
 
