@@ -15,7 +15,7 @@ def execute():
     TEST_SIZE = 40
     N_REPETITIONS = 30
     N_QUERIES = 80
-    N_COMMITTEE = 2
+    N_COMMITTEE = 3
 
     print('Executing active learning query & committee strategies tests...')
     query_committee(classifiers=CLASSIFIERS,
