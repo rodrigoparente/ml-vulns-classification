@@ -13,8 +13,8 @@ def execute():
 
     INITIAL_SIZE = 20
     TEST_SIZE = 40
-    N_REPETITIONS = 30
-    N_QUERIES = 80
+    N_REPETITIONS = 100
+    N_QUERIES = 100
     N_COMMITTEE = 3
 
     print('Executing active learning query & committee strategies tests...')
