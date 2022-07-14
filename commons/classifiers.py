@@ -24,14 +24,20 @@ def get_estimator(name):
     if name == 'rf':
         return RandomForestClassifier()
     elif name == 'gb':
-        return GradientBoostingClassifier()
+        return GridSearchCV(GradientBoostingClassifier(), param_grid={
+            "learning_rate": [0.01, 0.05, 0.1, 0.2],
+            "max_depth": [2, 3, 5, 7],
+            "n_estimators": [50, 100, 200]
+        }, scoring='accuracy', cv=5, n_jobs=-1)
     elif name == 'lr':
         return LogisticRegression(penalty='none')
     elif name == 'svc':
         return GridSearchCV(SVC(probability=True), [
             {'kernel': ['rbf'], 'gamma': 2 ** np.arange(-15.0, 4.0, 2),
                 'C': 2 ** np.arange(-5.0, 16.0, 2)},
-            {'kernel': ['linear'], 'C': 2 ** np.arange(-5.0, 16.0, 2)}
+            {'kernel': ['linear'], 'C': 2 ** np.arange(-5.0, 16.0, 2)},
+            {'kernel': ['poly'], 'C': 2 ** np.arange(-5.0, 16.0, 2),
+                'degree': [2, 3, 4, 5]}
         ], scoring='accuracy', cv=5, n_jobs=-1)
     elif name == 'mlp':
         return MLPClassifier()
