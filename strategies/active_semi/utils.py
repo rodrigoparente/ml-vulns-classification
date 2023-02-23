@@ -5,7 +5,7 @@ from timeit import default_timer as timer
 import numpy as np
 
 from modAL.models import ActiveLearner
-from modAL.uncertainty import entropy_sampling
+from modAL.uncertainty import uncertainty_sampling
 
 from sklearn.semi_supervised import SelfTrainingClassifier
 from sklearn.preprocessing import StandardScaler
@@ -46,7 +46,7 @@ def run_active_semi(model_name, scale_data, X_unlabelled, X_initial,
         X_test = scaler.transform(X_test)
 
     learner_active = ActiveLearner(estimator=get_estimator(model_name),
-                                   query_strategy=entropy_sampling,
+                                   query_strategy=uncertainty_sampling,
                                    X_training=X_train, y_training=y_train)
 
     for _ in range(n_queries):
