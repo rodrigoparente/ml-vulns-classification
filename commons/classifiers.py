@@ -1,11 +1,6 @@
 # third-party imports
 import numpy as np
 
-# patching sklearn lib to run faster
-# https://intel.github.io/scikit-learn-intelex/what-is-patching.html
-from sklearnex import patch_sklearn
-patch_sklearn()
-
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.linear_model import LogisticRegression
